@@ -135,14 +135,14 @@ template <typename Dtype>
 void ConvolutionLayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bottom,
       vector<Blob<Dtype>*>* top) {
 
-    // /LOG(INFO) << "YUNMING: test message in forward prop of conv_layer";
+    // LOG(INFO) << "YUNMING: test message in forward prop of conv_layer";
     // LOG(INFO) << "size of K_: " << K_;
     // LOG(INFO) << "size of M_: " << M_;
     // LOG(INFO) << "size of N_: " << N_;
-    //LOG(INFO) << "bottom size: " << bottom.size();
-    //LOG(INFO) << "bottom num:  " << bottom[0]->num();
-    //LOG(INFO) << "channels_ :  " << channels_;
-    //LOG(INFO) << "test data: " << bottom[0]->data_at(0,1,27,27);
+    // LOG(INFO) << "bottom size: " << bottom.size();
+    // LOG(INFO) << "bottom num:  " << bottom[0]->num();
+    // LOG(INFO) << "channels_ :  " << channels_;
+    // LOG(INFO) << "test data: " << bottom[0]->data_at(0,1,27,27);
 
   for (int i = 0; i < bottom.size(); ++i) {
     const Dtype* bottom_data = bottom[i]->cpu_data();
