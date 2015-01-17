@@ -398,13 +398,15 @@ class ConvolutionPoolingLayer : public Layer<Dtype> {
 
   
   
-  virtual void ConvLayerSetUp(const vector<Blob<Dtype>*>& bottom,
+  void ConvLayerSetUp(const vector<Blob<Dtype>*>& bottom,
+		      vector<Blob<Dtype>*>* top);
+  void PoolLayerSetUp(const vector<Blob<Dtype>*>& bottom,
       vector<Blob<Dtype>*>* top);
-  virtual void ConvReshape(const vector<Blob<Dtype>*>& bottom,
-      vector<Blob<Dtype>*>* top);
-  virtual void ConvForward_cpu(const vector<Blob<Dtype>*>& bottom,
-      vector<Blob<Dtype>*>* top);
-  virtual void ConvBackward_cpu(const vector<Blob<Dtype>*>& top,
+   void ConvReshape(const vector<Blob<Dtype>*>& bottom,
+		    vector<Blob<Dtype>*>* top);
+  void ConvForward_cpu(const vector<Blob<Dtype>*>& bottom,
+		       vector<Blob<Dtype>*>* top);
+  void ConvBackward_cpu(const vector<Blob<Dtype>*>& top,
       const vector<bool>& propagate_down, vector<Blob<Dtype>*>* bottom);
 
   virtual inline int MinBottomBlobs() const { return 1; }
