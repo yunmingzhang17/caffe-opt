@@ -391,7 +391,7 @@ class ConvolutionPoolingLayer : public Layer<Dtype> {
       vector<Blob<Dtype>*>* top);
 
   virtual inline LayerParameter_LayerType type() const {
-    return LayerParameter_LayerType_CONVOLUTION_POOLING;
+    return LayerParameter_LayerType_CONVOLUTIONPOOLING;
   }
 
 

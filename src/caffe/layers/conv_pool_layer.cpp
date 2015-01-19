@@ -11,7 +11,7 @@ namespace caffe {
 template <typename Dtype>
 void ConvolutionPoolingLayer<Dtype>::LayerSetUp(const vector<Blob<Dtype>*>& bottom, vector<Blob<Dtype>*>* top){
   this->ConvLayerSetUp(bottom, top);
-  this->PoolLayerSetUp(bottom, top);
+  //this->PoolLayerSetUp(bottom, top);
 
 
 }
@@ -146,6 +146,14 @@ void ConvolutionPoolingLayer<Dtype>::PoolLayerSetUp(const vector<Blob<Dtype>*>& 
     }
   }                                                      
 
+
+template <typename Dtype>
+void ConvolutionPoolingLayer<Dtype>::Reshape(const vector<Blob<Dtype>*>& bottom,
+      vector<Blob<Dtype>*>* top) {
+  this->ConvReshape(bottom, top);
+}
+
+
 template <typename Dtype>
 void ConvolutionPoolingLayer<Dtype>::ConvReshape(const vector<Blob<Dtype>*>& bottom,
       vector<Blob<Dtype>*>* top) {
@@ -189,6 +197,15 @@ void ConvolutionPoolingLayer<Dtype>::ConvReshape(const vector<Blob<Dtype>*>& bot
     caffe_set(N_, Dtype(1), bias_multiplier_.mutable_cpu_data());
   }
 }
+
+
+template <typename Dtype>
+void ConvolutionPoolingLayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bottom,
+      vector<Blob<Dtype>*>* top) {
+  this->ConvForward_cpu(bottom, top);
+}
+
+
 
 template <typename Dtype>
 void ConvolutionPoolingLayer<Dtype>::ConvForward_cpu(const vector<Blob<Dtype>*>& bottom,
@@ -234,6 +251,14 @@ void ConvolutionPoolingLayer<Dtype>::ConvForward_cpu(const vector<Blob<Dtype>*>&
       }
     }
   }
+}
+
+
+
+template <typename Dtype>
+void ConvolutionPoolingLayer<Dtype>::Backward_cpu(const vector<Blob<Dtype>*>& top,
+      const vector<bool>& propagate_down, vector<Blob<Dtype>*>* bottom) {
+  this->ConvBackward_cpu(top, propagate_down, bottom);
 }
 
 template <typename Dtype>
