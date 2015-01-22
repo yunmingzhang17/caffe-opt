@@ -11,7 +11,7 @@ namespace caffe {
 template <typename Dtype>
 void ConvolutionPoolingLayer<Dtype>::LayerSetUp(const vector<Blob<Dtype>*>& bottom, vector<Blob<Dtype>*>* top){
   this->ConvLayerSetUp(bottom, top);
-  //this->PoolLayerSetUp(bottom, top);
+  this->PoolLayerSetUp(bottom, top);
 
 
 }
@@ -21,53 +21,53 @@ template <typename Dtype>
 void ConvolutionPoolingLayer<Dtype>::ConvLayerSetUp(const vector<Blob<Dtype>*>& bottom,
       vector<Blob<Dtype>*>* top) {
   // Configure the kernel size, padding, stride, and inputs.
-  ConvolutionParameter conv_param = this->layer_param_.convolution_param();
-  CHECK(!conv_param.has_kernel_size() !=
-      !(conv_param.has_kernel_h() && conv_param.has_kernel_w()))
+  ConvolutionPoolingParameter convpool_param = this->layer_param_.convolutionpooling_param();
+  CHECK(!convpool_param.has_kernel_size() !=
+      !(convpool_param.has_kernel_h() && convpool_param.has_kernel_w()))
       << "Filter size is kernel_size OR kernel_h and kernel_w; not both";
-  CHECK(conv_param.has_kernel_size() ||
-      (conv_param.has_kernel_h() && conv_param.has_kernel_w()))
+  CHECK(convpool_param.has_kernel_size() ||
+      (convpool_param.has_kernel_h() && convpool_param.has_kernel_w()))
       << "For non-square filters both kernel_h and kernel_w are required.";
-  CHECK((!conv_param.has_pad() && conv_param.has_pad_h()
-      && conv_param.has_pad_w())
-      || (!conv_param.has_pad_h() && !conv_param.has_pad_w()))
+  CHECK((!convpool_param.has_pad() && convpool_param.has_pad_h()
+      && convpool_param.has_pad_w())
+      || (!convpool_param.has_pad_h() && !convpool_param.has_pad_w()))
       << "pad is pad OR pad_h and pad_w are required.";
-  CHECK((!conv_param.has_stride() && conv_param.has_stride_h()
-      && conv_param.has_stride_w())
-      || (!conv_param.has_stride_h() && !conv_param.has_stride_w()))
+  CHECK((!convpool_param.has_stride() && convpool_param.has_stride_h()
+      && convpool_param.has_stride_w())
+      || (!convpool_param.has_stride_h() && !convpool_param.has_stride_w()))
       << "Stride is stride OR stride_h and stride_w are required.";
-  if (conv_param.has_kernel_size()) {
-    kernel_h_ = kernel_w_ = conv_param.kernel_size();
+  if (convpool_param.has_kernel_size()) {
+    kernel_h_ = kernel_w_ = convpool_param.kernel_size();
   } else {
-    kernel_h_ = conv_param.kernel_h();
-    kernel_w_ = conv_param.kernel_w();
+    kernel_h_ = convpool_param.kernel_h();
+    kernel_w_ = convpool_param.kernel_w();
   }
   CHECK_GT(kernel_h_, 0) << "Filter dimensions cannot be zero.";
   CHECK_GT(kernel_w_, 0) << "Filter dimensions cannot be zero.";
-  if (!conv_param.has_pad_h()) {
-    pad_h_ = pad_w_ = conv_param.pad();
+  if (!convpool_param.has_pad_h()) {
+    pad_h_ = pad_w_ = convpool_param.pad();
   } else {
-    pad_h_ = conv_param.pad_h();
-    pad_w_ = conv_param.pad_w();
+    pad_h_ = convpool_param.pad_h();
+    pad_w_ = convpool_param.pad_w();
   }
-  if (!conv_param.has_stride_h()) {
-    stride_h_ = stride_w_ = conv_param.stride();
+  if (!convpool_param.has_stride_h()) {
+    stride_h_ = stride_w_ = convpool_param.stride();
   } else {
-    stride_h_ = conv_param.stride_h();
-    stride_w_ = conv_param.stride_w();
+    stride_h_ = convpool_param.stride_h();
+    stride_w_ = convpool_param.stride_w();
   }
   // Configure output channels and groups.
   channels_ = bottom[0]->channels();
-  num_output_ = this->layer_param_.convolution_param().num_output();
+  num_output_ = convpool_param.num_output();
   CHECK_GT(num_output_, 0);
-  group_ = this->layer_param_.convolution_param().group();
+  group_ = convpool_param.group();
   CHECK_EQ(channels_ % group_, 0);
   CHECK_EQ(num_output_ % group_, 0)
       << "Number of output should be multiples of group.";
   // Handle the parameters: weights and biases.
   // - blobs_[0] holds the filter weights
   // - blobs_[1] holds the biases (optional)
-  bias_term_ = this->layer_param_.convolution_param().bias_term();
+  bias_term_ = convpool_param.bias_term();
   if (this->blobs_.size() > 0) {
     LOG(INFO) << "Skipping parameter initialization";
   } else {
@@ -80,15 +80,14 @@ void ConvolutionPoolingLayer<Dtype>::ConvLayerSetUp(const vector<Blob<Dtype>*>& 
     // output channels x input channels per-group x kernel height x kernel width
     this->blobs_[0].reset(new Blob<Dtype>(
         num_output_, channels_ / group_, kernel_h_, kernel_w_));
-    shared_ptr<Filler<Dtype> > weight_filler(GetFiller<Dtype>(
-        this->layer_param_.convolution_param().weight_filler()));
+    shared_ptr<Filler<Dtype> > weight_filler(GetFiller<Dtype>(convpool_param.weight_filler()));
     weight_filler->Fill(this->blobs_[0].get());
     // If necessary, initialize and fill the biases:
     // 1 x 1 x 1 x output channels
     if (bias_term_) {
       this->blobs_[1].reset(new Blob<Dtype>(1, 1, 1, num_output_));
       shared_ptr<Filler<Dtype> > bias_filler(GetFiller<Dtype>(
-          this->layer_param_.convolution_param().bias_filler()));
+          convpool_param.bias_filler()));
       bias_filler->Fill(this->blobs_[1].get());
     }
   }

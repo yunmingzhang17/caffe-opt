@@ -307,7 +307,7 @@ message LayerParameter {
   optional ConvolutionParameter convolution_param = 10;
 
   //my own parameter for convolution
-  optional ConvolutionPoolingParameter convolution_pooling_param=42;
+  optional ConvolutionPoolingParameter convolutionpooling_param=42;
 
   optional DataParameter data_param = 11;
   optional DropoutParameter dropout_param = 12;
