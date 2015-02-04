@@ -13,3 +13,6 @@ features= caffeFeatures(dataset, filelist, layers, c);
 f = caffeLoad(dataset_name, layers, c);  %cell array, each being a cell of 2x4096
 f1 = f{1,1};
 f2 = f{2,1};
+
+length(find(f1 == 0)) %the number of zeros in f1  6726
+length(find(f2 == 0)) %the number of zeros in f2  6535
