@@ -3,7 +3,8 @@
 TOOLS=./build/tools
 
 $TOOLS/caffe train \
-  --solver=examples/cifar10/cifar10_quick_solver.prototxt
+  --solver=examples/cifar10/cifar10_quick_solver.prototxt \
+  --snapshot=examples/cifar10/cifar10_quick_iter_2000.solverstate
 
 # reduce learning rate by factor of 10 after 8 epochs
 $TOOLS/caffe train \
