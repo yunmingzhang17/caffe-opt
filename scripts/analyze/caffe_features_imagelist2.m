@@ -3,16 +3,20 @@ tmp1 = load('/data/vision/torralba/gigaSUN/deeplearning/dataset/feature_cafferef
 tmp2 = load('/data/vision/torralba/gigaSUN/deeplearning/dataset/feature_caffereference/DLfeature_ilsvrc2012test_pool5_giga.mat', 'imageList');
 image_list = [tmp1.imageList; tmp2.imageList;];
 clear tmp1 tmp2;
-numTest = 2; 
+numTest = 1000; 
 filelist = image_list(randperm(length(image_list), min(numTest, length(image_list))));
 c = caffeConfig(3);
 c.center_only = 1;
-layers = {'fc6', 'fc7'};
-dataset = 'test';
+c.reshape_features = 1;
+%layers = {'conv1', 'conv2', 'conv3', 'conv4', 'conv5', 'fc6', 'fc7'};
+layers = {'pool1', 'norm1', 'pool2', 'norm2', 'conv3'};
+dataset = tempname; dataset = dataset(5:15);
 features= caffeFeatures(dataset, filelist, layers, c);
-f = caffeLoad(dataset_name, layers, c);  %cell array, each being a cell of 2x4096
-f1 = f{1,1};
-f2 = f{2,1};
+f = caffeLoad(dataset, layers, c);  %cell array, each being a cell of 2x4096
 
-length(find(f1 == 0)) %the number of zeros in f1  6726
-length(find(f2 == 0)) %the number of zeros in f2  6535
+for i=1:size(f,1)
+	f1 = f{i, 1};
+disp(['layer: ' layers{i} ', sparsity: ' num2str(mean(f1(:)==0))]);
+end
+
+
