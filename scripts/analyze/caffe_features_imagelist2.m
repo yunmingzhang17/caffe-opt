@@ -3,7 +3,7 @@ tmp1 = load('/data/vision/torralba/gigaSUN/deeplearning/dataset/feature_cafferef
 tmp2 = load('/data/vision/torralba/gigaSUN/deeplearning/dataset/feature_caffereference/DLfeature_ilsvrc2012test_pool5_giga.mat', 'imageList');
 image_list = [tmp1.imageList; tmp2.imageList;];
 clear tmp1 tmp2;
-numTest = 2; 
+numTest = 10000; 
 filelist = image_list(randperm(length(image_list), min(numTest, length(image_list))));
 
 %layers = {'conv1', 'conv2', 'conv3', 'conv4', 'conv5', 'fc6', 'fc7'};
@@ -16,6 +16,7 @@ snapshotsNums = sort(importdata('/data/vision/scratch/torralba/khosla/cnn_dsl/ca
 numElem = s2;
 iterVector = zeros(1, numElem);
 
+fid = fopen('analyze_layer_sparsity.txt', 'w')
 
 for i = 1 : numElem
   snapshotFile = strcat(snapshotDir, 'caffe_object_train_iter_', num2str(snapshotsNums(i)))
@@ -30,11 +31,17 @@ for i = 1 : numElem
   f = caffeLoad(dataset, layers, c);  
 
   disp(['snapshot '  num2str(snapshotsNums(i))]);
+  s1 = strcat('snapshot ', num2str(snapshotsNums(i)));
+fprintf(fid, '%s\n', s1); 
+
   for i=1:size(f,1)
 	f1 = f{i, 1};
-  disp(['layer: ' layers{i} ', sparsity: ' num2str(mean(f1(:)==0))]);
-
-
+        disp(['layer: ' layers{i} ', sparsity: ' num2str(mean(f1(:)==0))]);
+s2 = strcat('layer: ', layers{i}, ',sparsity: ', num2str(mean(f1(:)==0)));
+fprintf(fid, '%s\n', s2); 
   end
+
 end
 
+
+  fclose(fid);
