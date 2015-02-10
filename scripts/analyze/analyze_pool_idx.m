@@ -12,13 +12,21 @@ numTest = 500; %a minimum of 500
 filelist = image_list(randperm(length(image_list), min(numTest, length(image_list))));
 
 layers = {'conv1', 'conv2', 'conv5', 'pool1',  'pool2',  'pool5'};
-
+idxOfLayerInNetwork = [2, 4, 9, 3, 6, 11]; %hard coded index into network set up!!!!!
 
 snapshotDir ='/data/vision/torralba/datasetbias/caffe-latest/examples/imagenet/';
 snapshotsNums = sort(importdata('/data/vision/scratch/torralba/khosla/cnn_dsl/caffe/snapshot_scripts/output_snapshot_num2.txt'));
 [s1, s2] = size(snapshotsNums);
 numElem = 1;
 iterVector = zeros(1, numElem);
+
+
+snapshotPoolIdxMap = containers.Map();
+
+deploy_txt ='/data/vision/torralba/datasetbias/caffe-latest/models/bvlc_reference_caffenet/deploy.prototxt'; 
+binary_file ='/data/vision/torralba/datasetbias/caffe-latest/models/bvlc_reference_caffenet/bvlc_reference_caffenet.caffemodel'; 
+verify_size = 0; 
+[rf, rf_layers] = getReceptiveField(deploy_txt, binary_file, verify_size);
 
 
 for i = 1: numElem
@@ -39,16 +47,52 @@ for i = 1: numElem
     %poolLayers = layers((numel(layers)/2 + 1), (numel(layers)));
     %convLayers = layers(1: (numel(layers)/2));
 
+
+
+    poolMap = containers.Map();
+    snapshotPoolIdxMap(snapshotFile) = poolMap; 
+    
+
+
     for j = 1 : (numel(layers)/2)
     
       convLayer = features{j,1};
       poolIdx = (j+(numel(layers)/2));
       poolLayer = features{poolIdx, 1};
-      %[numRow, numCol, numDep, numImage] = size(poolLayer)  
+      [numRow, numCol, numDep, numImage] = size(poolLayer)  
       %[numRow, numCol, numDep, numImage] = size(convLayer)
       convlayerName = layers(j)
       poolLayerName = layers(poolIdx)
+
+      poolIdxLayer = zeros(size(poolLayer));
+      poolMap(poolLayerName) = poolIdxLayer;
       
+
+      for depth = 1 : numDep
+	for imageIdx = 1 : numImage
+	  for x = 1: numRow
+	    for y = 1: numCol
+	      
+	      poolIdxInNetwork = idxOfLayerInNetwork(poolIdx);
+	      convIdxInNetwork = idxOfLayerInNetwork(j);
+
+	      maxVal = poolLayer(x,y, depth, imageIdx);
+	      regionIdx = rf{poolIdxInNetwork}(x, y, 1:4);
+	      x1 = regionIdx(1);
+	      y1 = regionIdx(2);
+	      x2 = regionIdx(3);
+	      y2 = regionIdx(4);
+
+	      region = convLayer(x1:x2, y1:y2, depth, imageIdx);
+	      findIdxOfMax(region, maxVal)
+
+	     
+
+	      
+	      end
+	    end
+	  end
+	end      
     end
     
     
