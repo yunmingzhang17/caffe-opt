@@ -65,14 +65,14 @@ for i = 1: numElem
       %[numRow, numCol, numDep, numImage] = size(convLayer)
 
       %hard coded for testing
-      numDep = 1;
-      numImage = 1;
+      %numDep = 1;
+      %numImage = 1;
 
       convlayerName = char(layers(j))
       poolLayerName = char(layers(poolIdx))
 
       poolIdxLayer = cell(size(poolLayer));
-      poolMap(poolLayerName) = poolIdxLayer;
+      
       
 
       for depth = 1 : numDep
@@ -85,14 +85,14 @@ for i = 1: numElem
 
 	      maxVal = poolLayer(x,y, depth, imageIdx)
 	      regionIdx = rf{poolIdxInNetwork}(x, y, 1:4);
-	      x1 = regionIdx(1)
-	      y1 = regionIdx(2)
-	      x2 = regionIdx(3)
-	      y2 = regionIdx(4)
+	      x1 = regionIdx(1);
+	      y1 = regionIdx(2);
+	      x2 = regionIdx(3);
+	      y2 = regionIdx(4);
 
 	      region = convLayer(x1:x2, y1:y2, depth, imageIdx)
-	      [xIdx, yIdx] = findIdxOfMax(region, maxVal)
-	      poolIdxLayer{x,y, depth, imageIdx} = [xIdx, yIdx];
+	      [rowIdx, colIdxx] = findIdxOfMax(region, maxVal)
+	      poolIdxLayer{x,y, depth, imageIdx} = [rowIdx, colIdx];
 	      
 
 	      
@@ -100,12 +100,25 @@ for i = 1: numElem
 	    end
 	  end
 	end      
+
+	poolMap(poolLayerName) = poolIdxLayer;
+
     end
     
+
     
 end
 
-
+%Testing for correctness for imagenet
 poolMap = snapshotPoolIdxMap('/data/vision/torralba/datasetbias/caffe-latest/examples/imagenet/caffe_object_train_iter_10000');
-poolMatrix = poolMap('pool1');
+
+pm1 = poolMap('pool1');
+pm1{2,1,1,1} %should be 2 1 (second row, first col)
+pm1{1,1,1,1} %should be 2,2
+
+pm5 = poolMap('pool5');
+pm5{4,2,1,1} %should be 3,3
+pm5(5,2,1,1} %should be 1,3
+
+
 
