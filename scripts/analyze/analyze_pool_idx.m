@@ -17,7 +17,9 @@ idxOfLayerInNetwork = [2, 4, 9, 3, 6, 11]; %hard coded index into network set up
 snapshotDir ='/data/vision/torralba/datasetbias/caffe-latest/examples/imagenet/';
 snapshotsNums = sort(importdata('/data/vision/scratch/torralba/khosla/cnn_dsl/caffe/snapshot_scripts/output_snapshot_num2.txt'));
 [s1, s2] = size(snapshotsNums);
-numElem = 1;
+
+numElem = 1; %just for testing
+
 iterVector = zeros(1, numElem);
 
 
@@ -59,12 +61,17 @@ for i = 1: numElem
       convLayer = features{j,1};
       poolIdx = (j+(numel(layers)/2));
       poolLayer = features{poolIdx, 1};
-      [numRow, numCol, numDep, numImage] = size(poolLayer)  
+      [numRow, numCol, numDep, numImage] = size(poolLayer);  
       %[numRow, numCol, numDep, numImage] = size(convLayer)
-      convlayerName = layers(j)
-      poolLayerName = layers(poolIdx)
 
-      poolIdxLayer = zeros(size(poolLayer));
+      %hard coded for testing
+      numDep = 1;
+      numImage = 1;
+
+      convlayerName = char(layers(j))
+      poolLayerName = char(layers(poolIdx))
+
+      poolIdxLayer = cell(size(poolLayer));
       poolMap(poolLayerName) = poolIdxLayer;
       
 
@@ -76,17 +83,17 @@ for i = 1: numElem
 	      poolIdxInNetwork = idxOfLayerInNetwork(poolIdx);
 	      convIdxInNetwork = idxOfLayerInNetwork(j);
 
-	      maxVal = poolLayer(x,y, depth, imageIdx);
+	      maxVal = poolLayer(x,y, depth, imageIdx)
 	      regionIdx = rf{poolIdxInNetwork}(x, y, 1:4);
-	      x1 = regionIdx(1);
-	      y1 = regionIdx(2);
-	      x2 = regionIdx(3);
-	      y2 = regionIdx(4);
+	      x1 = regionIdx(1)
+	      y1 = regionIdx(2)
+	      x2 = regionIdx(3)
+	      y2 = regionIdx(4)
 
-	      region = convLayer(x1:x2, y1:y2, depth, imageIdx);
-	      findIdxOfMax(region, maxVal)
-
-	     
+	      region = convLayer(x1:x2, y1:y2, depth, imageIdx)
+	      [xIdx, yIdx] = findIdxOfMax(region, maxVal)
+	      poolIdxLayer{x,y, depth, imageIdx} = [xIdx, yIdx];
+	      
 
 	      
 	      end
@@ -97,3 +104,8 @@ for i = 1: numElem
     
     
 end
+
+
+poolMap = snapshotPoolIdxMap('/data/vision/torralba/datasetbias/caffe-latest/examples/imagenet/caffe_object_train_iter_10000');
+poolMatrix = poolMap('pool1');
+
