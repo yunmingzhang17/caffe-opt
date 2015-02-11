@@ -18,7 +18,7 @@ snapshotDir ='/data/vision/torralba/datasetbias/caffe-latest/examples/imagenet/'
 snapshotsNums = sort(importdata('/data/vision/scratch/torralba/khosla/cnn_dsl/caffe/snapshot_scripts/output_snapshot_num2.txt'));
 [s1, s2] = size(snapshotsNums);
 
-numElem = 1; %just for testing
+numElem = 2; %just for testing
 
 iterVector = zeros(1, numElem);
 
@@ -30,19 +30,20 @@ binary_file ='/data/vision/torralba/datasetbias/caffe-latest/models/bvlc_referen
 verify_size = 0; 
 [rf, rf_layers] = getReceptiveField(deploy_txt, binary_file, verify_size);
 
+fid = fopen('analyze_pool_idx.txt', 'w')     
 
 for i = 1: numElem
 
-    snapshotFile = strcat(snapshotDir, 'caffe_object_train_iter_', num2str(snapshotsNums(i)))
+    snapshotFile = strcat(snapshotDir, 'caffe_object_train_iter_', num2str(snapshotsNums(i)));
     c = caffeConfig(3);
     c.definition_file = '/data/vision/torralba/datasetbias/caffe-latest/examples/imagenet/object_deploy.prototxt';
     c.center_only = 1;
     c.reshape_features = 0;
     c.binary_file = snapshotFile;
 
-    %dataset = tempname; dataset = dataset(5:15); %generating a tmp name 
+    dataset = tempname; dataset = dataset(5:15); %generating a tmp name 
     
-    dataset = 'test2';
+    %dataset = 'test2';
 
     features= caffeFeatures(dataset, filelist, layers, c);
 
@@ -65,15 +66,15 @@ for i = 1: numElem
       %[numRow, numCol, numDep, numImage] = size(convLayer)
 
       %hard coded for testing
-      %numDep = 1;
-      %numImage = 1;
+      numDep = 1;
+      numImage = 1;
 
-      convlayerName = char(layers(j))
-      poolLayerName = char(layers(poolIdx))
+      convlayerName = char(layers(j));
+      poolLayerName = char(layers(poolIdx));
 
       poolIdxLayer = cell(size(poolLayer));
       
-      
+
 
       for depth = 1 : numDep
 	for imageIdx = 1 : numImage
@@ -83,15 +84,15 @@ for i = 1: numElem
 	      poolIdxInNetwork = idxOfLayerInNetwork(poolIdx);
 	      convIdxInNetwork = idxOfLayerInNetwork(j);
 
-	      maxVal = poolLayer(x,y, depth, imageIdx)
+	      maxVal = poolLayer(x,y, depth, imageIdx);
 	      regionIdx = rf{poolIdxInNetwork}(x, y, 1:4);
 	      x1 = regionIdx(1);
 	      y1 = regionIdx(2);
 	      x2 = regionIdx(3);
 	      y2 = regionIdx(4);
 
-	      region = convLayer(x1:x2, y1:y2, depth, imageIdx)
-	      [rowIdx, colIdxx] = findIdxOfMax(region, maxVal)
+	      region = convLayer(x1:x2, y1:y2, depth, imageIdx);
+	      [rowIdx, colIdx] = findIdxOfMax(region, maxVal);
 	      poolIdxLayer{x,y, depth, imageIdx} = [rowIdx, colIdx];
 	      
 
@@ -105,20 +106,43 @@ for i = 1: numElem
 
     end
     
-
     
+    
+    if(i > 1)
+      prevSnapshotFile = strcat(snapshotDir, 'caffe_object_train_iter_', num2str(snapshotsNums(i-1)));
+      
+
+      s1 = strcat('snapshot ', num2str(snapshotsNums(i)));
+      fprintf(fid, '%s\n', s1); 
+      prevPoolMap = snapshotPoolIdxMap(prevSnapshotFile);
+
+
+      for j = 1 : (numel(layers)/2)
+      	      poolIdx = (j+(numel(layers)/2));
+      	      poolLayerName = char(layers(poolIdx));
+	      fprintf(fid, '%s\n', poolLayerName);
+      	      prevPMIdx = prevPoolMap(poolLayerName);
+      	      currentPMIdx = poolMap(poolLayerName);
+	      fprintf(fid, 'pool map size is %d \n', size(prevPMIdx(:))); 
+      	      numDiff = comparePoolIdxMap(prevPMIdx, currentPMIdx);
+              fprintf(fid, 'diff number is %d\n', numDiff);
+	      
+      end
+      
+    end
+
+
+
 end
 
-%Testing for correctness for imagenet
-poolMap = snapshotPoolIdxMap('/data/vision/torralba/datasetbias/caffe-latest/examples/imagenet/caffe_object_train_iter_10000');
+fclose(fid)
 
-pm1 = poolMap('pool1');
-pm1{2,1,1,1} %should be 2 1 (second row, first col)
-pm1{1,1,1,1} %should be 2,2
-
-pm5 = poolMap('pool5');
-pm5{4,2,1,1} %should be 3,3
-pm5(5,2,1,1} %should be 1,3
-
-
-
+%Testing for correctness for imagenet                                                    
+% poolMap = snapshotPoolIdxMap('/data/vision/torralba/datasetbias/caffe-latest/examples/imagenet/caffe_object_train_iter_10000');                                                                                                                          
+% pm1 = poolMap('pool1');                                                                
+% pm1{2,1,1,1}; %should be 2 1 (second row, first col)                                   
+% pm1{1,1,1,1}; %should be 2,2                                                       
+% pm5 = poolMap('pool5');                                                                
+% pm5{4,2,1,1}; %should be 3,3                                                           
+% pm5{5,2,1,1}; %should be 1,3                                                                                                                                                                                                                                      
+%Analyze the change of pool 
