@@ -11,8 +11,11 @@ clear tmp1 tmp2;
 numTest = 500; %a minimum of 500
 filelist = image_list(randperm(length(image_list), min(numTest, length(image_list))));
 
-layers = {'conv1', 'conv2', 'conv5', 'pool1',  'pool2',  'pool5'};
-idxOfLayerInNetwork = [2, 4, 9, 3, 6, 11]; %hard coded index into network set up!!!!!
+%layers = {'conv1', 'conv2', 'conv5', 'pool1',  'pool2',  'pool5'};
+%idxOfLayerInNetwork = [2, 4, 9, 3, 6, 11]; %hard coded index into network set up!!!!!
+
+layers = {'conv1', 'pool1'};
+idxOfLayerInNetwork = [2, 3];
 
 snapshotDir ='/data/vision/torralba/datasetbias/caffe-latest/examples/imagenet/';
 snapshotsNums = sort(importdata('/data/vision/scratch/torralba/khosla/cnn_dsl/caffe/snapshot_scripts/output_snapshot_num2.txt'));
@@ -30,7 +33,7 @@ binary_file ='/data/vision/torralba/datasetbias/caffe-latest/models/bvlc_referen
 verify_size = 0; 
 [rf, rf_layers] = getReceptiveField(deploy_txt, binary_file, verify_size);
 
-fid = fopen('analyze_pool_idx.txt', 'w')     
+fid = fopen('analyze_pool_idx.txt', 'w');
 
 for i = 1: numElem
 
@@ -41,9 +44,9 @@ for i = 1: numElem
     c.reshape_features = 0;
     c.binary_file = snapshotFile;
 
-    dataset = tempname; dataset = dataset(5:15); %generating a tmp name 
+    %dataset = tempname; dataset = dataset(5:15); %generating a tmp name 
     
-    %dataset = 'test2';
+    dataset = num2str(snapshotsNums(i));
 
     features= caffeFeatures(dataset, filelist, layers, c);
 
@@ -65,7 +68,7 @@ for i = 1: numElem
       [numRow, numCol, numDep, numImage] = size(poolLayer);  
       %[numRow, numCol, numDep, numImage] = size(convLayer)
 
-      %hard coded for testing
+      %hard coded for testing !!!!!!!
       numDep = 1;
       numImage = 1;
 
@@ -74,9 +77,11 @@ for i = 1: numElem
 
       poolIdxLayer = cell(size(poolLayer));
       
+      %poolIdxLayerX = zeros(size(poolLayer))
+      %poolIdxLayerY = zeros(size(poolLayer))
 
 
-      for depth = 1 : numDep
+      parfor depth = 1 : numDep
 	for imageIdx = 1 : numImage
 	  for x = 1: numRow
 	    for y = 1: numCol
@@ -116,13 +121,17 @@ for i = 1: numElem
       fprintf(fid, '%s\n', s1); 
       prevPoolMap = snapshotPoolIdxMap(prevSnapshotFile);
 
+	      
+      numPoolLayers = (numel(layers)/2);
+     %numPoolLayers = 1; %hard coded for testing !!!!!!!!!
 
-      for j = 1 : (numel(layers)/2)
+      for j = 1 : numPoolLayers
       	      poolIdx = (j+(numel(layers)/2));
       	      poolLayerName = char(layers(poolIdx));
 	      fprintf(fid, '%s\n', poolLayerName);
       	      prevPMIdx = prevPoolMap(poolLayerName);
       	      currentPMIdx = poolMap(poolLayerName);
+	
 	      fprintf(fid, 'pool map size is %d \n', size(prevPMIdx(:))); 
       	      numDiff = comparePoolIdxMap(prevPMIdx, currentPMIdx);
               fprintf(fid, 'diff number is %d\n', numDiff);
@@ -135,11 +144,11 @@ for i = 1: numElem
 
 end
 
-fclose(fid)
+fclose(fid);
 
 %Testing for correctness for imagenet                                                    
-% poolMap = snapshotPoolIdxMap('/data/vision/torralba/datasetbias/caffe-latest/examples/imagenet/caffe_object_train_iter_10000');                                                                                                                          
-% pm1 = poolMap('pool1');                                                                
+poolMap = snapshotPoolIdxMap('/data/vision/torralba/datasetbias/caffe-latest/examples/imagenet/caffe_object_train_iter_10000');                                                                                                                          
+%pm1 = poolMap('pool1');                                                                
 % pm1{2,1,1,1}; %should be 2 1 (second row, first col)                                   
 % pm1{1,1,1,1}; %should be 2,2                                                       
 % pm5 = poolMap('pool5');                                                                
