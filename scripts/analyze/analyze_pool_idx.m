@@ -26,7 +26,10 @@ numElem = 2; %just for testing
 iterVector = zeros(1, numElem);
 
 
-snapshotPoolIdxMap = containers.Map();
+%snapshotPoolIdxMap = containers.Map();
+
+snapshotPoolIdxMapX = containers.Map();
+snapshotPoolIdxMapY = containers.Map();
 
 deploy_txt ='/data/vision/torralba/datasetbias/caffe-latest/models/bvlc_reference_caffenet/deploy.prototxt'; 
 binary_file ='/data/vision/torralba/datasetbias/caffe-latest/models/bvlc_reference_caffenet/bvlc_reference_caffenet.caffemodel'; 
@@ -55,9 +58,13 @@ for i = 1: numElem
 
 
 
-    poolMap = containers.Map();
-    snapshotPoolIdxMap(snapshotFile) = poolMap; 
+    poolMapX = containers.Map();
+    poolMapY = containers.Map();
+
+    %snapshotPoolIdxMap(snapshotFile) = poolMap; 
     
+    snapshotPoolIdxMapX(snapshotFile) = poolMapX; 
+    snapshotPoolIdxMapY(snapshotFile) = poolMapY; 
 
 
     for j = 1 : (numel(layers)/2)
@@ -75,13 +82,13 @@ for i = 1: numElem
       convlayerName = char(layers(j));
       poolLayerName = char(layers(poolIdx));
 
-      poolIdxLayer = cell(size(poolLayer));
+      %poolIdxLayer = cell(size(poolLayer));
       
-      %poolIdxLayerX = zeros(size(poolLayer))
-      %poolIdxLayerY = zeros(size(poolLayer))
+      poolIdxLayerX = zeros(size(poolLayer));
+      poolIdxLayerY = zeros(size(poolLayer));
 
 
-      parfor depth = 1 : numDep
+      for depth = 1 : numDep
 	for imageIdx = 1 : numImage
 	  for x = 1: numRow
 	    for y = 1: numCol
@@ -98,7 +105,11 @@ for i = 1: numElem
 
 	      region = convLayer(x1:x2, y1:y2, depth, imageIdx);
 	      [rowIdx, colIdx] = findIdxOfMax(region, maxVal);
-	      poolIdxLayer{x,y, depth, imageIdx} = [rowIdx, colIdx];
+
+	      poolIdxLayerX(x,y, depth, imageIdx) = rowIdx;
+	      poolIdxLayerY(x,y, depth, imageIdx) = colIdx;
+
+	      %poolIdxLayer{x,y, depth, imageIdx} = [rowIdx, colIdx];
 	      
 
 	      
@@ -107,7 +118,12 @@ for i = 1: numElem
 	  end
 	end      
 
-	poolMap(poolLayerName) = poolIdxLayer;
+	%poolMap(poolLayerName) = poolIdxLayer;
+	poolMapX(poolLayerName) = poolIdxLayerX;
+	poolMapY(poolLayerName) = poolIdxLayerY;
+
+	%size(find(poolIdxLayerX(:)))
+	%size(find(poolIdxLayerY(:)))
 
     end
     
@@ -119,8 +135,8 @@ for i = 1: numElem
 
       s1 = strcat('snapshot ', num2str(snapshotsNums(i)));
       fprintf(fid, '%s\n', s1); 
-      prevPoolMap = snapshotPoolIdxMap(prevSnapshotFile);
-
+      prevPoolMapX = snapshotPoolIdxMapX(prevSnapshotFile);
+      prevPoolMapY = snapshotPoolIdxMapY(prevSnapshotFile);
 	      
       numPoolLayers = (numel(layers)/2);
      %numPoolLayers = 1; %hard coded for testing !!!!!!!!!
@@ -129,12 +145,19 @@ for i = 1: numElem
       	      poolIdx = (j+(numel(layers)/2));
       	      poolLayerName = char(layers(poolIdx));
 	      fprintf(fid, '%s\n', poolLayerName);
-      	      prevPMIdx = prevPoolMap(poolLayerName);
-      	      currentPMIdx = poolMap(poolLayerName);
+      	      prevPMIdX = prevPoolMapX(poolLayerName);
+      	      prevPMIdY = prevPoolMapY(poolLayerName);
+
+              currentPMIdY = poolMapY(poolLayerName);
+              currentPMIdX = poolMapX(poolLayerName);
 	
 	      fprintf(fid, 'pool map size is %d \n', size(prevPMIdx(:))); 
-      	      numDiff = comparePoolIdxMap(prevPMIdx, currentPMIdx);
-              fprintf(fid, 'diff number is %d\n', numDiff);
+      	      
+	      %numDiff = comparePoolIdxMap(prevPMIdx, currentPMIdx);
+	      unchangedRatio = comparePoolIdxMap(prevPMIdX, prevPMIdY, currentPMIdX, currentPMIdY);	      
+		      
+
+              fprintf(fid, 'unchanged ratio is %s\n', unchangedRatio);
 	      
       end
       
