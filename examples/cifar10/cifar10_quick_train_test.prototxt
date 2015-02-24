@@ -164,7 +164,6 @@ layers {
 
 
 
-
 layers {
   name: "ip2"
   type: INNER_PRODUCT
