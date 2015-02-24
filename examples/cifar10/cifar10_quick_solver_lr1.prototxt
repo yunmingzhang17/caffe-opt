@@ -22,4 +22,4 @@ max_iter: 5000
 snapshot: 5000
 snapshot_prefix: "examples/cifar10/cifar10_quick"
 # solver mode: CPU or GPU
-solver_mode: GPU
+solver_mode: CPU

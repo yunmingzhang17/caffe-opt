@@ -819,6 +819,23 @@ const shared_ptr<Layer<Dtype> > Net<Dtype>::layer_by_name(
   return layer_ptr;
 }
 
+  template <typename Dtype>  
+  void Net<Dtype>::PrintTimings() {
+    LOG(INFO) << "Timings\n";
+
+    long total = 0;
+
+    for (int i = 0; i < timings.size(); i++) {
+      total += timings[i];
+    }
+
+    for (int i = 0; i < timings.size(); i++) {
+      LOG(INFO) << layer_names_[i] << ": " << timings[i] << " " << 100*timings[i]/total << '\n';
+      //LOG(INFO) << "index: " << layer_names_index_[layer_names_[i]] << '\n';
+    }  
+  }
+  
+
 INSTANTIATE_CLASS(Net);
 
 }  // namespace caffe
