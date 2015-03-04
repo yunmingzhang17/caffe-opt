@@ -7,6 +7,10 @@
 #include <utility>
 #include <vector>
 
+//for timing
+#include <iostream>
+#include <sys/time.h>
+
 #include "caffe/blob.hpp"
 #include "caffe/common.hpp"
 #include "caffe/layer.hpp"
@@ -144,7 +148,9 @@ class Net {
   const shared_ptr<Blob<Dtype> > blob_by_name(const string& blob_name);
   bool has_layer(const string& layer_name);
   const shared_ptr<Layer<Dtype> > layer_by_name(const string& layer_name);
-
+  void PrintTimings() ; //timing
+  void TimeStart();
+  long TimeEnd();
   void set_debug_info(const bool value) { debug_info_ = value; }
 
   // Helpers for Init.
@@ -224,6 +230,12 @@ class Net {
   size_t memory_used_;
   /// Whether to compute and display debug info for the net.
   bool debug_info_;
+
+  vector<long> forwardTimings;
+  vector<long> backwardTimings;
+
+  struct timeval startTV, endTV;
+  long seconds,useconds,mtime;
 
   DISABLE_COPY_AND_ASSIGN(Net);
 };

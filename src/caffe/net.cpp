@@ -215,6 +215,12 @@ void Net<Dtype>::Init(const NetParameter& in_param) {
   for (size_t layer_id = 0; layer_id < layer_names_.size(); ++layer_id) {
     layer_names_index_[layer_names_[layer_id]] = layer_id;
   }
+  
+  for (size_t layer_id = 0; layer_id < layer_names_.size(); ++layer_id) {
+    forwardTimings.push_back(0);
+    backwardTimings.push_back(0);
+  }
+
   GetLearningRateAndWeightDecay();
   LOG(INFO) << "Network initialization done.";
   LOG(INFO) << "Memory required for data: " << memory_used_ * sizeof(Dtype);
@@ -505,7 +511,14 @@ Dtype Net<Dtype>::ForwardFromTo(int start, int end) {
   for (int i = start; i <= end; ++i) {
     // LOG(ERROR) << "Forwarding " << layer_names_[i];
     layers_[i]->Reshape(bottom_vecs_[i], &top_vecs_[i]);
+
+    TimeStart();
+
     Dtype layer_loss = layers_[i]->Forward(bottom_vecs_[i], &top_vecs_[i]);
+
+    long elapsedTime = TimeEnd();
+    forwardTimings[i] += elapsedTime;
+
     loss += layer_loss;
     if (debug_info_) { ForwardDebugInfo(i); }
   }
@@ -568,11 +581,14 @@ void Net<Dtype>::BackwardFromTo(int start, int end) {
   CHECK_GE(end, 0);
   CHECK_LT(start, layers_.size());
   for (int i = start; i >= end; --i) {
+    TimeStart();
     if (layer_need_backward_[i]) {
       layers_[i]->Backward(
           top_vecs_[i], bottom_need_backward_[i], &bottom_vecs_[i]);
       if (debug_info_) { BackwardDebugInfo(i); }
     }
+    long elapsedTime = TimeEnd();
+    backwardTimings[i] += elapsedTime;
   }
 }
 
@@ -825,16 +841,44 @@ const shared_ptr<Layer<Dtype> > Net<Dtype>::layer_by_name(
 
     long total = 0;
 
-    for (int i = 0; i < timings.size(); i++) {
-      total += timings[i];
+    for (int i = 0; i < forwardTimings.size(); i++) {
+      total += forwardTimings[i];
     }
 
-    for (int i = 0; i < timings.size(); i++) {
-      LOG(INFO) << layer_names_[i] << ": " << timings[i] << " " << 100*timings[i]/total << '\n';
+    for (int i = 0; i < forwardTimings.size(); i++) {
+      LOG(INFO) << "forward " << layer_names_[i] << ": " << forwardTimings[i] << " " << 100*forwardTimings[i]/total << '%\n';
       //LOG(INFO) << "index: " << layer_names_index_[layer_names_[i]] << '\n';
     }  
+
+
+    total = 0;
+
+    for (int i = 0; i < backwardTimings.size(); i++) {
+      total += backwardTimings[i];
+    }
+
+    for (int i = 0; i < backwardTimings.size(); i++) {
+      LOG(INFO) << "backward " << layer_names_[i] << ": " << backwardTimings[i] << " " << 100*backwardTimings[i]/total << '%\n';
+      //LOG(INFO) << "index: " << layer_names_index_[layer_names_[i]] << '\n';
+    }
+
+
+  }
+
+
+  template <typename Dtype>
+  void Net<Dtype>::TimeStart(){
+    gettimeofday(&startTV, NULL);
   }
   
+  template <typename Dtype>
+  long Net<Dtype>::TimeEnd(){
+    gettimeofday(&endTV, NULL);
+    seconds = endTV.tv_sec - startTV.tv_sec;
+    useconds = endTV.tv_usec - startTV.tv_usec;
+    mtime = ((seconds) * 1000 + useconds/1000.0) + 0.5;
+    return mtime;
+  }  
 
 INSTANTIATE_CLASS(Net);
 

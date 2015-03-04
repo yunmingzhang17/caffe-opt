@@ -195,7 +195,9 @@ void Solver<Dtype>::Solve(const char* resume_file) {
 
     const bool display = param_.display() && iter_ % param_.display() == 0;
     net_->set_debug_info(display && param_.debug_info());
+    
     Dtype loss = net_->ForwardBackward(bottom_vec);
+    
     if (losses.size() < average_loss) {
       losses.push_back(loss);
       int size = losses.size();
@@ -228,6 +230,8 @@ void Solver<Dtype>::Solve(const char* resume_file) {
       }
     }
 
+    
+
     ComputeUpdateValue();
     net_->Update();
   }
@@ -248,7 +252,9 @@ void Solver<Dtype>::Solve(const char* resume_file) {
   if (param_.test_interval() && iter_ % param_.test_interval() == 0) {
     TestAll();
   }
+  
   LOG(INFO) << "Optimization Done.";
+  net_-> PrintTimings();
 }
 
 
