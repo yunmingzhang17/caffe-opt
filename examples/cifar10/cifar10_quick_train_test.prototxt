@@ -32,8 +32,8 @@ layers {
   type: CONVOLUTION
   bottom: "data"
   top: "conv1"
-  blobs_lr: 0
-  blobs_lr: 0
+  blobs_lr: 1
+  blobs_lr: 2
   convolution_param {
     num_output: 32
     pad: 2
@@ -48,7 +48,6 @@ layers {
     }
   }
 }
-
 layers {
   name: "pool1"
   type: POOLING
@@ -71,8 +70,8 @@ layers {
   type: CONVOLUTION
   bottom: "pool1"
   top: "conv2"
-  blobs_lr: 0
-  blobs_lr: 0
+  blobs_lr: 1
+  blobs_lr: 2
   convolution_param {
     num_output: 32
     pad: 2
@@ -160,14 +159,10 @@ layers {
     }
   }
 }
-
-
-
-
 layers {
   name: "ip2"
   type: INNER_PRODUCT
-  bottom: "conv1"
+  bottom: "ip1"
   top: "ip2"
   blobs_lr: 1
   blobs_lr: 2
@@ -190,7 +185,6 @@ layers {
   top: "accuracy"
   include: { phase: TEST }
 }
-
 layers {
   name: "loss"
   type: SOFTMAX_LOSS

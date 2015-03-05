@@ -582,11 +582,20 @@ void Net<Dtype>::BackwardFromTo(int start, int end) {
   CHECK_LT(start, layers_.size());
   for (int i = start; i >= end; --i) {
     TimeStart();
+    // LOG(INFO) << "[backward]" 
+    // 	      <<  "Layer " << layer_names_[layer_id] << ", top blob "
+    // 	      << bottom_vecs_[i][0]->height
+    
+
     if (layer_need_backward_[i]) {
+      //LOG(INFO) << "layer: " << i << " needs backward prop";
+      //LOG(INFO) << "debuginfo: " << debug_info_;
       layers_[i]->Backward(
           top_vecs_[i], bottom_need_backward_[i], &bottom_vecs_[i]);
       if (debug_info_) { BackwardDebugInfo(i); }
     }
+
+    
     long elapsedTime = TimeEnd();
     backwardTimings[i] += elapsedTime;
   }
@@ -606,9 +615,18 @@ void Net<Dtype>::ForwardDebugInfo(const int layer_id) {
 
 template <typename Dtype>
 void Net<Dtype>::BackwardDebugInfo(const int layer_id) {
+  //LOG(INFO) << "Inside BackwardDebugInfo for layer: " << layer_id;
   const vector<Blob<Dtype>*>& bottom_vec = bottom_vecs_[layer_id];
   for (int bottom_id = 0; bottom_id < bottom_vec.size(); ++bottom_id) {
-    if (!bottom_need_backward_[layer_id][bottom_id]) { continue; }
+    if (!bottom_need_backward_[layer_id][bottom_id]) { 
+      //LOG(INFO) << "BackwardDebugInfo: Layer: " << layer_id << " bottom id: " << bottom_id << " don't need backward prop";
+      
+      continue; 
+    }
+
+
+    //LOG(INFO) << "BackwardDebugInfo: Layer: " << layer_id << " bottom id: " << bottom_id << " need backward prop";
+
     const Blob<Dtype>& blob = *bottom_vec[bottom_id];
     const string& blob_name = blob_names_[bottom_id_vecs_[layer_id][bottom_id]];
     const Dtype diff_abs_val_mean = blob.asum_diff() / blob.count();
@@ -846,7 +864,7 @@ const shared_ptr<Layer<Dtype> > Net<Dtype>::layer_by_name(
     }
 
     for (int i = 0; i < forwardTimings.size(); i++) {
-      LOG(INFO) << "forward " << layer_names_[i] << ": " << forwardTimings[i] << " " << 100*forwardTimings[i]/total << '%\n';
+      LOG(INFO) << "forward " << layer_names_[i] << ": " << forwardTimings[i] << " " << 100*forwardTimings[i]/total << '\n';
       //LOG(INFO) << "index: " << layer_names_index_[layer_names_[i]] << '\n';
     }  
 
@@ -858,7 +876,7 @@ const shared_ptr<Layer<Dtype> > Net<Dtype>::layer_by_name(
     }
 
     for (int i = 0; i < backwardTimings.size(); i++) {
-      LOG(INFO) << "backward " << layer_names_[i] << ": " << backwardTimings[i] << " " << 100*backwardTimings[i]/total << '%\n';
+      LOG(INFO) << "backward " << layer_names_[i] << ": " << backwardTimings[i] << " " << 100*backwardTimings[i]/total << '\n';
       //LOG(INFO) << "index: " << layer_names_index_[layer_names_[i]] << '\n';
     }
 
