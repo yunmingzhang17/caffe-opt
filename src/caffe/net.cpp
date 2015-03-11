@@ -626,13 +626,33 @@ void Net<Dtype>::BackwardDebugInfo(const int layer_id) {
 
 
     //LOG(INFO) << "BackwardDebugInfo: Layer: " << layer_id << " bottom id: " << bottom_id << " need backward prop";
-
-    const Blob<Dtype>& blob = *bottom_vec[bottom_id];
+    //const Blob<Dtype>& blob = *bottom_vec[bottom_id];
+    Blob<Dtype>& blob = *bottom_vec[bottom_id];
     const string& blob_name = blob_names_[bottom_id_vecs_[layer_id][bottom_id]];
     const Dtype diff_abs_val_mean = blob.asum_diff() / blob.count();
     LOG(INFO) << "    [Backward] "
         << "Layer " << layer_names_[layer_id] << ", bottom blob " << blob_name
         << " diff: " << diff_abs_val_mean;
+    LOG(INFO) << "channels: " << blob.channels();
+    LOG(INFO) << "height: " << blob.height();
+    LOG(INFO) << "width: " << blob.width();
+    LOG(INFO) << "count: " << blob.count();
+
+    
+    Dtype* diff = blob.mutable_cpu_diff();
+    int zeroCount = 0;
+
+    for (int i = 0; i < blob.count(); i++) {
+      if (diff[i] == 0) {
+        zeroCount++;
+      }
+    }
+    
+
+    //LOG(INFO) << "zero count: " << blob.mutable_cpu_diff_num_zero();
+    LOG(INFO) << "[mutable_cpu_diff] zero count: " << zeroCount;
+    LOG(INFO) << "[mutable_cpu_diff] zero ratio: " << double(zeroCount)/blob.count();
+
   }
   for (int param_id = 0; param_id < layers_[layer_id]->blobs().size();
        ++param_id) {
@@ -642,6 +662,11 @@ void Net<Dtype>::BackwardDebugInfo(const int layer_id) {
     LOG(INFO) << "    [Backward] "
         << "Layer " << layer_names_[layer_id] << ", param blob " << param_id
         << " diff: " << diff_abs_val_mean;
+    LOG(INFO) << "channels: " << blob.channels();
+    LOG(INFO) << "height: " << blob.height();
+    LOG(INFO) << "width: " << blob.width();
+    LOG(INFO) << "count: " << blob.count();
+
   }
 }
 

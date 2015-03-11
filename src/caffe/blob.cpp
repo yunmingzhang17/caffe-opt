@@ -84,9 +84,29 @@ Dtype* Blob<Dtype>::mutable_cpu_diff() {
   CHECK(diff_);
   return static_cast<Dtype*>(diff_->mutable_cpu_data());
 }
-
+  
 template <typename Dtype>
-Dtype* Blob<Dtype>::mutable_gpu_diff() {
+int Blob<Dtype>::mutable_cpu_diff_num_zero() {
+  CHECK(diff_);
+  Dtype* diff = static_cast<Dtype*>(diff_->mutable_cpu_data());
+  int zeroCount = 0;
+  
+  for (int i = 0; i < count_; i++) {
+      if (diff[i] == 0) { 
+	zeroCount++; 
+      }
+    }
+	 LOG(INFO) << "[mutable_cpu_diff] zero ratio: " << zeroCount/count_;
+       LOG(INFO) << "[mutable_cpu_diff] zero count: " << zeroCount;
+       LOG(INFO) << "[mutable_cpu_diff] total count: " << count_;
+       
+       return zeroCount;
+       
+       }
+  
+
+ template <typename Dtype>
+ Dtype* Blob<Dtype>::mutable_gpu_diff() {
   CHECK(diff_);
   return static_cast<Dtype*>(diff_->mutable_gpu_data());
 }

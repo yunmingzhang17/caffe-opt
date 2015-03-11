@@ -106,6 +106,7 @@ class Blob {
   Dtype asum_data() const;
   /// @brief Compute the sum of absolute values (L1 norm) of the diff.
   Dtype asum_diff() const;
+  int mutable_cpu_diff_num_zero();
 
   /**
    * @brief Set the data_ shared_ptr to point to the SyncedMemory holding the
