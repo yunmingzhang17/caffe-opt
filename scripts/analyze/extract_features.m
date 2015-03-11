@@ -10,12 +10,14 @@ layers = {'pool5'}
 snapshotFile ='/data/vision/torralba/datasetbias/caffe-latest/examples/imagenet/caffe_object_train_iter_450000';
 c = caffeConfig(3);
 c.definition_file = '/data/vision/torralba/datasetbias/caffe-latest/examples/imagenet/object_deploy.prototxt';
-c.center_only = 1;
-c.reshape_features = 1;
+c.center_only = 0;
+c.reshape_features = 0;
 c.binary_file = snapshotFile;
-dataset='imagenet-450000';
+%dataset='imagenet-450000';
+dataset = tempname; dataset = dataset(5:15);
 features= caffeFeatures(dataset, filelist, layers, c);
-f = caffeLoad(dataset, layers, c);
+randomSelectedFeatures = selectRandomFeatures(features);
+%f = caffeLoad(dataset, layers, c);
 
 
 c1 = caffeInitialize(c);
