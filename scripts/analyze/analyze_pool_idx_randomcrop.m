@@ -16,18 +16,18 @@ clear tmp1 tmp2;
 numTest = 500; %a minimum of 500
 filelist = image_list(randperm(length(image_list), min(numTest, length(image_list))));
 
-%layers = {'conv1', 'conv2', 'conv5', 'pool1',  'pool2',  'pool5'};
-%idxOfLayerInNetwork = [2, 4, 9, 3, 6, 11]; %hard coded index into network set up!!!!!
+layers = {'conv1', 'conv2', 'conv5', 'pool1',  'pool2',  'pool5'};
+idxOfLayerInNetwork = [2, 4, 9, 3, 6, 11]; %hard coded index into network set up!!!!!
 
-layers = {'conv1', 'pool1'};
-idxOfLayerInNetwork = [2, 3];
+%layers = {'conv1', 'pool1'};
+%idxOfLayerInNetwork = [2, 3];
 
 snapshotDir ='/data/vision/torralba/datasetbias/caffe-latest/examples/imagenet/';
 snapshotsNums = sort(importdata('/data/vision/scratch/torralba/khosla/cnn_dsl/caffe/snapshot_scripts/output_snapshot_num2.txt'));
 [s1, s2] = size(snapshotsNums);
 
-numElem = 2; %just for testing !!!!!!!!
-%numElem = s2;
+%numElem = 2; %just for testing !!!!!!!!
+numElem = s2;
 
 
 iterVector = zeros(1, numElem);

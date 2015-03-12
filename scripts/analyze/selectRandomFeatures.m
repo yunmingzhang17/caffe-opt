@@ -20,5 +20,5 @@ function [randomSelectedFeatures] = selectRandomFeatures (features)
     randomSelectedFeatures{layerId,1} = randomSelectFeaturesLayer;
   end
   
-  clear(features);
+  clear features;
 end
